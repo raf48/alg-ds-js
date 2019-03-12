@@ -1,7 +1,8 @@
 /**
- * Find shortest path from source to destination on a 2D grid with obstacles
- * Start from upper left corner and end when reaching destination point (9)
- * Apply Breadth-first search for unweighted directed graph
+ * Find shortest path from source to destination on a 2D grid.
+ * Start from upper left corner and end when reaching destination
+ * point (9). Apply Breadth-first search for unweighted directed graph.
+ * When reaching desitination point reconstruct path array.
  * Time complexity = O(N), where N is the number of grid cells
  */
 const findShortestPath2D = function(grid) {
@@ -11,40 +12,48 @@ const findShortestPath2D = function(grid) {
 
   if (height === 0 || width === 0) return -1;
 
-  // array used to calculate directions
+  // recursively reconstruct path and return as array
+  const reconstructPath = function(current, map, arr) {
+    if (current === null) return arr;
+    arr.unshift(current);
+    return reconstructPath(map.get(current), map, arr);
+  }
+
+  // array used when calculating directions
   const dir = [[-1, 0], [0, 1], [1, 0], [0, -1]];
 
-  const queue = [[0, 0]]; // start at postions [0, 0]
-  const visitedCells = new Set(); // Set for keeping track of visited cells
-  visitedCells.add(0); // mark start cell as visited
-  let minPath = 0;
+  const start = [0, 0]; // start at upper left corner => [0, 0]
+  const queue = [];
+  const visitedCells = new Set();
+  const pathMap = new Map(); // map used when reconstructing path
+
+  queue.push(start);
+  visitedCells.add(0);
+  pathMap.set(start, null);
 
   while (queue.length) {
-    minPath++;
-
     let queueSize = queue.length;
 
     while (queueSize) { // same as while (queueSize > 0)
-      const cell = queue.shift();
-      const x = cell[0];
-      const y = cell[1];
+      const node = queue.shift();
 
-      // loop through all directions
+      // loop through all possible adjacent cells
       for (let i = 0; i < dir.length; i++) {
-        const dx = x + dir[i][0];
-        const dy = y + dir[i][1];
-        const id = dx<<16 | dy; // or just use string => [dx,dy].toString()
+        const dx = node[0] + dir[i][0];
+        const dy = node[1] + dir[i][1];
+        const cur = [dx, dy];
+        const curNum = dx << 16 | dy; // or use toString => [dx,dy].toString()
 
-        // make to stay within the grid bounds and avoid visiting same cell
         if (dx >= 0 && dy >= 0 && dx < height && dy < width &&
-            !visitedCells.has(id)) {
-          // if adjacent cell is an obsticle return current path counter
+            !visitedCells.has(curNum)) {
+          // if adjacent cell is target cell reconstruct and return path array
           if (grid[dx][dy] === 9) {
-            return minPath;
+            return reconstructPath(node, pathMap, []);
           }
           if (grid[dx][dy] === 1) {
-            visitedCells.add(id); // mark cell as visited
-            queue.push([dx, dy]); // push cell to the queue
+            pathMap.set(cur, node);  // store path to parent cell
+            visitedCells.add(curNum);  // mark cell as visited
+            queue.push(cur);  // add cell to the queue
           }
         }
       }
@@ -52,32 +61,20 @@ const findShortestPath2D = function(grid) {
     }
   }
 
-  // if no path found that means obstacle is not reachable
+  // if no path found that means destination point is not reachable
   return -1;
 }
 
 console.log(findShortestPath2D([
-  // uncomment to test the following test cases
-  // longest path (341)
-  // [1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0],
-  // [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
-  // [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
-  // [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
-  // [1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,9],
-  // shortest path (129)
-  // [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  // [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
-  // [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
-  // [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
-  // [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,9],
-  // spiral maze (61)
-  [1,0,1,1,1,1,1,1,1,1,1,1],
-  [1,0,1,0,0,0,0,0,0,0,0,1],
-  [1,0,1,0,1,1,1,1,1,1,0,1],
-  [1,0,1,0,1,0,0,0,0,1,0,1],
-  [1,0,1,0,1,1,1,1,0,1,0,1],
-  [1,0,1,0,0,0,1,1,0,1,0,1],
-  [1,0,1,1,1,1,1,1,0,1,0,1],
-  [1,0,0,0,0,0,0,0,0,1,0,1],
-  [1,1,1,1,1,1,1,1,1,1,0,9],
+  // spiral maze
+  [1,0,1,1,1,1,1,1,1,1],
+  [1,0,1,0,0,0,0,0,0,1],
+  [1,0,1,0,1,1,1,1,0,1],
+  [1,0,1,0,1,0,0,1,0,1],
+  [1,0,1,0,1,1,0,1,0,1],
+  [1,0,1,0,1,1,0,1,0,1],
+  [1,0,1,0,0,1,0,1,0,1],
+  [1,0,1,1,1,1,0,1,0,1],
+  [1,0,0,0,0,0,0,1,0,1],
+  [1,1,1,1,1,1,1,1,0,9],
 ]));
